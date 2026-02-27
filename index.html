@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Mi Página con Reproductor</title>
   <!-- Cargar CSS del reproductor -->
-  <link rel="stylesheet" href="/reproductor/reproductor.css">
+  <link rel="stylesheet" href="/video/reproductor/reproductor.css">
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -60,7 +60,7 @@
   <!-- Script para cargar el HTML y luego el JS -->
   <script>
     // Cargar el HTML del reproductor desde el archivo externo
-    fetch('/reproductor/player.html')
+    fetch('/video/reproductor/player.html')
       .then(response => {
         if (!response.ok) throw new Error('No se pudo cargar el reproductor HTML');
         return response.text();
@@ -69,7 +69,7 @@
         document.getElementById('player-container').innerHTML = html;
         // Una vez insertado el HTML, cargar el JavaScript del reproductor
         const script = document.createElement('script');
-        script.src = '/reproductor/reproductor.js';
+        script.src = '/video/reproductor/reproductor.js';
         script.onload = () => {
           console.log('Reproductor JS cargado correctamente');
           // Opcional: inicializar algo después de cargar
