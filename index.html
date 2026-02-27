@@ -1,1102 +1,322 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Reproductor Profesional</title>
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
-       
-        :root { --primary: #7f19e6; }
-       
-        * { box-sizing: border-box; margin:0; padding:0; }
-        html, body { height: 100%; width: 100%; overflow: hidden; background: #000; font-family: 'Inter', sans-serif; }
-       
-        .player-wrapper {
-            position: relative;
-            width: 100%;
-            height: 100%;
-            max-width: 100%;
-            max-height: 100%;
-            margin: 0 auto;
-            background: #000;
-            overflow: hidden;
-            user-select: none;
-        }
-       
-        video {
-            width: 100%;
-            height: 100%;
-            object-fit: contain;
-            background: #000;
-        }
-       
-        .control-top, .control-bottom, .center-play, .watermark-container {
-            opacity: 0;
-            transition: opacity 0.45s ease;
-            pointer-events: none;
-        }
-        .show-controls .control-top,
-        .show-controls .control-bottom,
-        .show-controls .center-play,
-        .show-controls .watermark-container {
-            opacity: 1;
-            pointer-events: auto;
-        }
-       
-        .control-top { background: linear-gradient(to bottom, rgba(0,0,0,0.88) 0%, transparent 100%); }
-        .control-bottom { background: linear-gradient(to top, rgba(0,0,0,0.92) 0%, rgba(0,0,0,0.45) 60%, transparent 100%); }
-       
-        .control-top { 
-            position: absolute; 
-            top: 0; 
-            left: 0; 
-            right: 0; 
-            z-index: 50; 
-            padding: 2rem 1.5rem 1rem; 
-            display: flex; 
-            justify-content: space-between; 
-            align-items: center; 
-        }
-        .top-left-group {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            max-width: 70%;
-        }
-        .title-author {
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-        }
-        #episode-title, #episode-subtitle {
-            color: #fff;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-        #episode-title { font-size: 1.2rem; }
-        #episode-subtitle { font-size: 0.85rem; }
-       
-        .center-play { position: absolute; inset: 0; z-index: 40; display: flex; align-items: center; justify-content: center; }
-        .center-play > div { padding: 1.2rem; background: rgba(0,0,0,0.45); backdrop-filter: blur(12px); border-radius: 9999px; border: 2px solid rgba(255,255,255,0.15); }
-        .center-play img { width: 60px; height: 60px; }
-       
-        .loading-overlay { 
-            position: absolute; 
-            inset: 0; 
-            z-index: 60; 
-            background: #000; 
-            display: none; 
-            flex-direction: column; 
-            align-items: center; 
-            justify-content: center; 
-        }
-        .loading-cover {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            opacity: 0.7;
-        }
-        .loading-message {
-            position: relative;
-            z-index: 2;
-            color: #fff;
-            font-size: 1.8rem;
-            font-weight: 500;
-            text-shadow: 0 2px 10px rgba(0,0,0,0.8);
-            background: rgba(0,0,0,0.5);
-            padding: 0.8rem 2rem;
-            border-radius: 50px;
-            backdrop-filter: blur(4px);
-        }
-        .loading-dots::after { content: ' .'; animation: dots 1.4s infinite steps(4); }
-        @keyframes dots { 0%{content:'.'} 33%{content:'..'} 66%{content:'...'} }
-       
-        .control-bottom { position: absolute; bottom: 0; left: 0; right: 0; z-index: 50; padding: 4rem 1.5rem 1.5rem; }
-        .progress-container { margin-bottom: 1rem; cursor: pointer; }
-        .scrubber-bg { height: 4px; background: rgba(255,255,255,0.25); border-radius: 9999px; transition: height 0.2s; }
-        .progress-container:hover .scrubber-bg { height: 7px; }
-        .progress-bar { height: 100%; background: var(--primary); border-radius: 9999px; position: relative; }
-        .progress-bar::after { content:''; position: absolute; right:-5px; top:50%; transform:translateY(-50%); width:12px; height:12px; background:var(--primary); border-radius:50%; box-shadow:0 0 10px rgba(127,25,230,0.6); opacity:0; transition:opacity 0.2s; }
-        .progress-container:hover .progress-bar::after { opacity:1; }
-       
-        .buttons-row { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.8rem; }
-        .left-group { display: flex; align-items: center; gap: 1.2rem; flex-wrap: wrap; }
-        .right-group { display: flex; align-items: center; gap: 1rem; }
-       
-        button { 
-            background: none; 
-            border: none; 
-            padding: 6px; 
-            cursor: pointer; 
-            transition: transform 0.2s; 
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        button:hover { transform: scale(1.08); }
-        button img { display: block; }
-        .no-copy { pointer-events: none; user-select: none; -webkit-user-drag: none; }
-       
-        /* === MEJORAS MÓVIL === */
-        @media (max-width: 768px) {
-            .control-top {
-                padding: 1rem 0.8rem;
-            }
-            .top-left-group {
-                gap: 6px;
-            }
-            .watermark-container img {
-                height: 24px !important;
-                width: auto;
-            }
-            #episode-title {
-                font-size: 0.85rem;
-            }
-            #episode-subtitle {
-                font-size: 0.6rem;
-            }
-            .center-play > div {
-                padding: 0.7rem;
-            }
-            .center-play img {
-                width: 48px;
-                height: 48px;
-            }
-            .control-bottom {
-                padding: 2rem 0.8rem 1rem;
-            }
-            .progress-container {
-                margin-bottom: 0.5rem;
-            }
-            .scrubber-bg {
-                height: 5px;
-            }
-            .buttons-row {
-                gap: 0.3rem;
-            }
-            button {
-                padding: 4px;
-            }
-            button img {
-                width: 22px !important;
-                height: 22px !important;
-            }
-            #volume-slider {
-                width: 45px !important;
-            }
-            #next-episode-btn {
-                padding: 4px 8px !important;
-                font-size: 0.6rem !important;
-            }
-            #next-episode-btn img {
-                width: 12px !important;
-                height: 12px !important;
-            }
-            .control-top button#pip-btn,
-            .control-top button#fullscreen-btn {
-                display: none;
-            }
-            #rewind-10,
-            #play-pause-btn,
-            #forward-10,
-            #volume-slider,
-            #chapters-btn,
-            #next-episode-btn {
-                display: none !important;
-            }
-            #fullscreen-btn-bottom {
-                display: inline-block;
-            }
-            .left-group {
-                gap: 0.3rem;
-            }
-            .right-group {
-                gap: 0.3rem;
-            }
-        }
-
-        /* Fullscreen móvil */
-        .mobile-fullscreen #rewind-10,
-        .mobile-fullscreen #play-pause-btn,
-        .mobile-fullscreen #forward-10,
-        .mobile-fullscreen #volume-slider,
-        .mobile-fullscreen #chapters-btn,
-        .mobile-fullscreen #next-episode-btn {
-            display: inline-block !important;
-        }
-        .mobile-fullscreen #fullscreen-btn-bottom {
-            display: inline-block !important;
-        }
-        .mobile-fullscreen .control-top button#pip-btn {
-            display: inline-block !important;
-        }
-        .mobile-fullscreen .control-top button#fullscreen-btn {
-            display: none !important; /* Ocultamos el de arriba */
-        }
-        .mobile-fullscreen .control-top {
-            padding: 0.8rem 0.5rem;
-        }
-        .mobile-fullscreen .control-bottom {
-            padding: 1.5rem 0.5rem 0.8rem;
-        }
-        .mobile-fullscreen button img {
-            width: 20px !important;
-            height: 20px !important;
-        }
-        .mobile-fullscreen #next-episode-btn {
-            padding: 3px 6px !important;
-            font-size: 0.55rem !important;
-        }
-        .mobile-fullscreen #next-episode-btn img {
-            width: 10px !important;
-            height: 10px !important;
-        }
-        .mobile-fullscreen #volume-slider {
-            width: 35px !important;
-        }
-        .mobile-fullscreen .center-play img {
-            width: 40px !important;
-            height: 40px !important;
-        }
-       
-        .watermark-container {
-            position: static;
-            display: inline-block;
-        }
-        .watermark-container a {
-            display: block;
-            line-height: 0;
-        }
-       
-        /* Indicadores de búsqueda */
-        .seek-indicator {
-            position: absolute;
-            top: 50%;
-            transform: translateY(-50%);
-            background: rgba(0,0,0,0.7);
-            color: white;
-            padding: 12px 20px;
-            border-radius: 40px;
-            font-size: 2rem;
-            font-weight: bold;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            z-index: 100;
-            backdrop-filter: blur(4px);
-            border: 2px solid var(--primary);
-            pointer-events: none;
-            opacity: 0;
-            transition: opacity 0.2s;
-        }
-        .seek-indicator.show {
-            opacity: 1;
-        }
-        .seek-indicator.left {
-            left: 20px;
-        }
-        .seek-indicator.right {
-            right: 20px;
-        }
-        .seek-indicator img {
-            width: 32px;
-            height: 32px;
-            filter: invert(1);
-        }
-       
-        /* Modal de compartir */
-        .modal-overlay {
-            position: absolute;
-            inset: 0;
-            background: rgba(0,0,0,0.8);
-            z-index: 200;
-            display: none;
-            align-items: center;
-            justify-content: center;
-            backdrop-filter: blur(5px);
-        }
-        .modal-content {
-            background: #1a1a1a;
-            border-radius: 20px;
-            padding: 25px;
-            max-width: 500px;
-            width: 90%;
-            color: white;
-            border: 1px solid #333;
-        }
-        .modal-content h3 {
-            margin-bottom: 15px;
-            color: var(--primary);
-        }
-        .modal-option {
-            margin-bottom: 20px;
-        }
-        .modal-option label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: 500;
-        }
-        .modal-option input {
-            width: 100%;
-            padding: 10px;
-            background: #333;
-            border: 1px solid #555;
-            color: white;
-            border-radius: 8px;
-            font-size: 0.9rem;
-        }
-        .modal-option button {
-            margin-top: 8px;
-            background: var(--primary);
-            color: white;
-            border: none;
-            padding: 8px 15px;
-            border-radius: 20px;
-            font-weight: 600;
-            cursor: pointer;
-        }
-        .modal-close {
-            text-align: right;
-        }
-        .modal-close button {
-            background: transparent;
-            border: 1px solid #666;
-            color: white;
-            padding: 5px 15px;
-            border-radius: 20px;
-        }
-        /* Botón compartir */
-        #share-btn img {
-            width: 22px;
-            height: 22px;
-            filter: invert(1);
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Página con Reproductor Universal</title>
+  <!-- Cargar CSS del reproductor -->
+  <link rel="stylesheet" href="/reproductor/reproductor.css">
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #111;
+      color: white;
+      padding: 20px;
+    }
+    button {
+      padding: 10px 20px;
+      font-size: 16px;
+      background: #ff0000;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      margin: 5px;
+    }
+    #openPlayerBtn {
+      position: fixed;
+      bottom: 80px;
+      right: 20px;
+      background: #222;
+      border: 1px solid #ff0000;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 15px;
+      border-radius: 30px;
+      z-index: 1000;
+    }
+    #openPlayerBtn img {
+      width: 24px;
+      height: 24px;
+    }
+  </style>
 </head>
 <body>
-<div class="player-wrapper show-controls" id="player-container">
-    <video id="video" playsinline=""></video>
-   
-    <div class="watermark-container" id="watermark-original" style="display: none;">
-        <a id="watermark-link" href="https://misitio.com" target="_blank" rel="noopener">
-            <img src="https://nikichitonjesus.odoo.com/web/image/570-f83626c0/Programas-removebg-preview%20%281%29.png" alt="Marca" class="no-copy" style="height:42px; width:auto; filter:drop-shadow(0 4px 12px rgba(0,0,0,0.6));" loading="lazy">
-        </a>
-    </div>
-   
-    <div class="control-top">
-        <div class="top-left-group" id="top-left-group">
-            <div class="title-author">
-                <h1 id="episode-title" class="text-2xl font-bold">Niki Chiton Jesus Videos</h1>
-                <p id="episode-subtitle" class="text-sm">Kristo</p>
-            </div>
-        </div>
-        <div style="display:flex; gap:10px;">
-            <button id="share-btn">
-                <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='18' cy='5' r='3'%3E%3C/circle%3E%3Ccircle cx='6' cy='12' r='3'%3E%3C/circle%3E%3Ccircle cx='18' cy='19' r='3'%3E%3C/circle%3E%3Cline x1='8.59' y1='13.51' x2='15.42' y2='17.49'%3E%3C/line%3E%3Cline x1='15.41' y1='6.51' x2='8.59' y2='10.49'%3E%3C/line%3E%3C/svg%3E" alt="Compartir" style="width:22px;height:22px;">
-            </button>
-            <button id="pip-btn">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><rect x="3" y="5" width="18" height="14" rx="2"></rect><rect x="13" y="10" width="8" height="6" rx="1" fill="#7f19e6"></rect></svg>
-            </button>
-            <button id="fullscreen-btn">
-                <img src="https://nikichitonjesus.odoo.com/web/image/622-49c31be4/full.png" alt="Fullscreen" class="no-copy" style="width:22px;height:22px;" loading="lazy">
-            </button>
-        </div>
-    </div>
-   
-    <div id="center-play-btn" class="center-play">
-        <div>
-            <img id="center-icon" src="https://nikichitonjesus.odoo.com/web/image/715-d5d403f0/playvid.png" alt="Play" class="no-copy" style="width:60px;height:60px;" loading="lazy">
-        </div>
-    </div>
-   
-    <div id="loading-overlay" class="loading-overlay">
-        <img id="loading-cover" class="loading-cover" src="https://www.lzmradiomiami.com/wp-content/uploads/2018/05/Dimensiones-personalizadas-660x330-px-660x330.jpeg" alt="Cover" loading="lazy">
-        <div class="loading-message">
-            Cargando<span class="loading-dots ml-2"></span>
-        </div>
-    </div>
-   
-    <div class="control-bottom">
-        <div id="progress-container" class="progress-container">
-            <div class="scrubber-bg">
-                <div id="progress-bar" class="progress-bar" style="width:0%"></div>
-            </div>
-            <div style="display:flex; justify-content:space-between; margin-top:4px; font-size:0.75rem; color:#ddd; font-weight:500;">
-                <span id="current-time">00:00</span>
-                <span id="duration">00:00</span>
-            </div>
-        </div>
-        <div class="buttons-row">
-            <div class="left-group">
-                <button id="rewind-10"><img src="https://video-nikichitonjesus.odoo.com/web/image/438-deea748f/-10.webp" class="no-copy" style="width:36px;height:36px;" loading="lazy"></button>
-                <button id="play-pause-btn"><img id="play-icon" src="https://nikichitonjesus.odoo.com/web/image/715-d5d403f0/playvid.png" class="no-copy" style="width:50px;height:50px;" loading="lazy"></button>
-                <button id="forward-10"><img src="https://video-nikichitonjesus.odoo.com/web/image/439-9448d521/%2B10.webp" class="no-copy" style="width:36px;height:36px;" loading="lazy"></button>
-               
-                <div style="display:flex; align-items:center; gap:8px; margin-left:10px;">
-                    <button id="volume-btn"><img id="volume-icon" src="https://nikichitonjesus.odoo.com/web/image/587-e4437449/volumen.png" class="no-copy" style="width:28px;height:28px;" loading="lazy"></button>
-                    <input id="volume-slider" type="range" min="0" max="1" step="0.01" value="1" style="width:90px; accent-color:#7f19e6;">
-                </div>
-            </div>
-            <div class="right-group">
-                <button id="chapters-btn"><img src="https://video-nikichitonjesus.odoo.com/web/image/445-ad116cfc/episodios.webp" class="no-copy" style="width:28px;height:28px;" loading="lazy"></button>
-                <button id="fullscreen-btn-bottom" style="display: none;">
-                    <img src="https://nikichitonjesus.odoo.com/web/image/622-49c31be4/full.png" alt="Fullscreen" class="no-copy" style="width:28px;height:28px;" loading="lazy">
+  <h1>Bienvenido a mi sitio</h1>
+  <p>Este es un ejemplo de página que incluye el reproductor universal.</p>
+  <button onclick="window.togglePlayer()">Abrir / Cerrar reproductor</button>
+  <button onclick="playMiEpisodio()">Reproducir episodio personalizado</button>
+
+  <!-- Botón flotante para abrir el reproductor (opcional) -->
+  <button id="openPlayerBtn" onclick="window.togglePlayer()">
+    <img src="https://nikichitonjes-home.odoo.com/web/image/478-0e3df8d3/reanudar.gif" alt="icon">
+    <span>Escuchar</span>
+  </button>
+
+  <!-- Incluir el HTML del reproductor (puede ser directamente aquí o mediante fetch) -->
+  <!-- Por simplicidad, incluimos el código HTML directamente (podría cargarse vía fetch) -->
+  <div id="playerUniversal" class="player-universal">
+    <div id="playerExpanded" class="player-expanded" style="display: none;">
+      <div class="complex1 top-controls">
+        <button id="mediaModeToggle" class="media-mode-toggle">
+          <span class="mode-left">Audio</span>
+          <span class="mode-right">Video</span>
+        </button>
+        <button id="minimizeBtn" class="minimize-btn">
+          <img src="https://marca1.odoo.com/web/image/490-b15e1d52/minimizar.svg" alt="Minimize" loading="lazy">
+        </button>
+      </div>
+      <div class="content-wrapper">
+        <div class="complex2">
+          <div id="mediaContainer" class="media-container">
+            <video id="mediaElement" style="display: none;" controlsList="nodownload nofullscreen noremoteplayback" disablePictureInPicture preload="metadata"></video>
+            <img id="mediaCover" style="display: block;" src="" loading="lazy">
+            <div class="overlay-gradient" id="overlayGradient">
+              <div class="media-controls-center">
+                <button id="playPauseMedia" class="control-btn">
+                  <img id="playPauseIconMedia" src="https://nikichitonjesus.odoo.com/web/image/1140-f876320c/play.svg" alt="Play" loading="lazy">
                 </button>
-                <button id="next-episode-btn" style="background:#7f19e6; color:#fff; padding:10px 20px; border-radius:9999px; font-weight:700; font-size:0.9rem; display:flex; align-items:center; gap:6px;">
-                    <img src="https://nikichitonjesus.odoo.com/web/image/1063-22720d4e/sig.png" class="no-copy" style="width:18px;height:18px;" loading="lazy"> <span>Siguiente Episodio</span>
+              </div>
+              <div class="media-controls-bottom">
+                <button id="volumeBtn" class="volume-btn">
+                  <img id="volumeIcon" src="https://marca1.odoo.com/web/image/505-b00aeb8e/volumen.svg" alt="Volume" loading="lazy">
                 </button>
+                <button id="fullscreenBtn" class="fullscreen-btn">
+                  <img src="https://marca1.odoo.com/web/image/499-48202209/full.svg" alt="Fullscreen" loading="lazy">
+                </button>
+              </div>
             </div>
+            <div class="seek-indicator-left" id="seekIndicatorLeft">
+              <span id="seekSecondsLeft">15s</span>
+              <img src="https://marca1.odoo.com/web/image/506-1607e7a0/retroceder%2015.svg" alt="Rewind" loading="lazy">
+            </div>
+            <div class="seek-indicator-right" id="seekIndicatorRight">
+              <img src="https://marca1.odoo.com/web/image/504-db1a8f7a/avanzar%2015s.svg" alt="Forward" loading="lazy">
+              <span id="seekSecondsRight">15s</span>
+            </div>
+            <div id="fullscreenControls" class="fullscreen-controls" style="display: none;">
+              <!-- Controles en fullscreen (similar a antes) -->
+            </div>
+            <div id="muteIndicator" class="mute-indicator" style="display: none;">Silenciado</div>
+          </div>
         </div>
-    </div>
-   
-    <div id="error-message" style="display:none; position:absolute; inset:0; z-index:70; background:rgba(0,0,0,0.92); align-items:center; justify-content:center; flex-direction:column; color:#fff;">
-        <p style="font-size:1.4rem; color:#f87171; margin-bottom:1.5rem; text-align:center;">Problemas con el contenido</p>
-        <button onclick="retryVideo()" style="background:#7f19e6; color:#fff; border:none; padding:14px 30px; border-radius:9999px; font-weight:600; font-size:1rem;">Reintentar</button>
-    </div>
-   
-    <div id="episodes-sidebar" style="position:absolute; top:0; right:0; bottom:0; width:340px; background:#191121; z-index:80; transform:translateX(100%); transition:transform 0.5s; border-left:1px solid rgba(255,255,255,0.1); display:flex; flex-direction:column;">
-        <div style="padding:1.2rem; display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid rgba(255,255,255,0.1);">
-            <h2 id="sidebar-title" style="font-size:1.2rem; font-weight:700; color:#fff;">Episodios</h2>
-            <button id="close-sidebar" style="padding:8px;">
-                <img src="https://nikichitonjesus.odoo.com/web/image/560-69997e09/cerrar.png" class="no-copy" style="width:22px;height:22px;" loading="lazy">
+        <div class="complex3">
+          <div class="episode-info" id="episodeInfo">
+            <div class="left-section">
+              <img src="" alt="Portada" loading="lazy">
+            </div>
+            <div class="center-section">
+              <span id="episodeTitle"></span>
+              <span class="author" id="episodeAuthor"></span>
+            </div>
+            <div class="right-section">
+              <button id="addToPlaylistBtn">
+                <img id="addToPlaylistIcon" src="https://nikichitonjesus.odoo.com/web/image/772-ea85aa4b/a%C3%B1adir%20a.png" alt="Add to Playlist" loading="lazy">
+              </button>
+            </div>
+          </div>
+          <div class="video-progress-container-expanded" id="progressContainerExpanded">
+            <div class="progress-bar-expanded" id="progressBarExpanded">
+              <div class="progress-knob-expanded"></div>
+            </div>
+          </div>
+          <div class="time-info">
+            <span id="currentTimeExpanded">00:00</span>
+            <span id="durationExpanded">00:00</span>
+          </div>
+          <div class="controls">
+            <div class="speed-container">
+              <img id="speedIcon" src="https://nikichitonjesus.odoo.com/web/image/1113-9a93ad3a/speed.png" alt="Velocidad" loading="lazy">
+            </div>
+            <button id="previousExpanded">
+              <img src="https://marca1.odoo.com/web/image/502-e1f7bc1b/ant.svg" alt="Previous" loading="lazy">
             </button>
+            <button id="rewindExpanded">
+              <img src="https://marca1.odoo.com/web/image/503-ed98d111/retroceder15.svg" alt="Rewind" loading="lazy">
+            </button>
+            <button id="playPauseExpanded">
+              <img id="playPauseIconExpanded" src="https://nikichitonjesus.odoo.com/web/image/984-ba35a699/play.webp" alt="Play" loading="lazy">
+            </button>
+            <button id="forwardExpanded">
+              <img src="https://marca1.odoo.com/web/image/507-089c3773/avanzar15.svg" alt="Forward" loading="lazy">
+            </button>
+            <button id="nextExpanded">
+              <img src="https://marca1.odoo.com/web/image/500-1957f422/sig.svg" alt="Next" loading="lazy">
+            </button>
+            <div class="timer-container">
+              <img id="timerIcon" src="https://marca1.odoo.com/web/image/512-4489ad50/tempo.svg" alt="Timer" loading="lazy">
+            </div>
+          </div>
+          <div class="action-buttons-container">
+            <div class="action-buttons" id="actionButtons">
+              <button id="likesBtn" class="action-btn">
+                <img id="likesIcon" src="https://marca1.odoo.com/web/image/511-0363beb5/meg.svg" alt="Me gusta" loading="lazy">
+                <span>Me gusta</span>
+              </button>
+              <button id="downloadBtn" class="action-btn">
+                <img id="downloadIcon" src="https://nikichitonjesus.odoo.com/web/image/624-ec376d7f/descargar.png" alt="Download" loading="lazy">
+                <span>Descargar</span>
+              </button>
+              <button id="shareBtn" class="action-btn">
+                <img src="https://nikichitonjesus.odoo.com/web/image/585-036b7961/cpmartir.png" alt="Share" loading="lazy">
+                <span>Compartir</span>
+              </button>
+              <button id="repeatBtn" class="action-btn">
+                <img src="https://nikichitonjesus.odoo.com/web/image/771-e8de83ec/repetir-.png" alt="Repeat" loading="lazy">
+                <span>Repetir</span>
+              </button>
+              <button id="colaBtn" class="action-btn">
+                <img src="https://marca1.odoo.com/web/image/515-2e6082a5/cola.svg" alt="Cola" loading="lazy">
+                <span>Cola</span>
+              </button>
+              <button id="detallesBtn" class="action-btn">
+                <img src="https://nikichitonjesus.odoo.com/web/image/995-7301139c/trasncrip.webp" alt="Detalles" loading="lazy">
+                <span>Detalles</span>
+              </button>
+              <button id="bibliotecaBtn" class="action-btn">
+                <img src="https://marca1.odoo.com/web/image/517-7bde9b69/Archive.svg" alt="Biblioteca" loading="lazy">
+                <span>Biblioteca</span>
+              </button>
+            </div>
+          </div>
+          <div class="program-container">
+            <button id="programBtn" class="full-width-btn">
+              <img src="https://nikichitonjes-home.odoo.com/web/image/478-0e3df8d3/reanudar.gif" alt="Program" loading="lazy">
+              <span>Programa del Día</span>
+            </button>
+          </div>
+          <div class="tabs-text">
+            <a id="linkCola"><b><span style="color: white;">A continuación</span></b></a>
+            <a id="linkDetalles"><b><span style="color: white;">Detalles</span></b></a>
+            <a id="linkBiblioteca"><b><span style="color: white;">Biblioteca</span></b></a>
+          </div>
         </div>
-        <div id="episodes-list" style="flex:1; overflow-y:auto; padding:0.8rem;"></div>
-    </div>
-
-    <!-- Indicadores de búsqueda -->
-    <div id="seek-indicator-left" class="seek-indicator left">
-        <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 12H4M4 12L8 8M4 12L8 16'%3E%3C/path%3E%3C/svg%3E" alt="atras">
-        <span id="seek-left-value">10</span>
-    </div>
-    <div id="seek-indicator-right" class="seek-indicator right">
-        <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 12h16M20 12l-4-4M20 12l-4 4'%3E%3C/path%3E%3C/svg%3E" alt="adelante">
-        <span id="seek-right-value">10</span>
-    </div>
-
-    <!-- Modal de compartir -->
-    <div id="share-modal" class="modal-overlay">
-        <div class="modal-content">
-            <div class="modal-close">
-                <button id="close-modal">✕</button>
-            </div>
-            <h3>Compartir</h3>
-            <div class="modal-option" id="embed-video-option">
-                <label>Video actual (iframe)</label>
-                <input type="text" id="embed-video-code" readonly value='<iframe width="560" height="315" src="https://misitio.com/embed/job-un-hombre-fiel" frameborder="0" allowfullscreen></iframe>'>
-                <button onclick="copyToClipboard('embed-video-code')">Copiar</button>
-            </div>
-            <div class="modal-option" id="embed-serie-option" style="display:none;">
-                <label>Serie completa (iframe)</label>
-                <input type="text" id="embed-serie-code" readonly value='<iframe width="560" height="315" src="https://misitio.com/embed/serie/1" frameborder="0" allowfullscreen></iframe>'>
-                <button onclick="copyToClipboard('embed-serie-code')">Copiar</button>
-            </div>
+      </div>
+      <div class="panel-container" id="panelContainer" style="display: none;">
+        <div class="panel-header">
+          <div class="tabs">
+            <a id="tabCola" class="tab-content active">Cola</a>
+            <a id="tabDetalles" class="tab-content">Detalles</a>
+            <a id="tabBiblioteca" class="tab-content">Biblioteca</a>
+            <a id="tabVelocidad" class="tab-speed">Velocidad</a>
+            <a id="tabTemporizador" class="tab-timer">Temporizador</a>
+          </div>
+          <div class="panel-controls">
+            <button id="togglePanelHeightBtn">
+              <img src="https://marca1.odoo.com/web/image/513-e0bcd17f/maz.svg" alt="Ampliar/Minimizar" loading="lazy">
+            </button>
+            <button id="closePanelBtn">
+              <img src="https://marca1.odoo.com/web/image/518-a62b303e/cierra.svg" alt="Cerrar" loading="lazy">
+            </button>
+          </div>
         </div>
+        <div class="panel-content">
+          <div id="colaContent" class="panel-section active">
+            <div class="next-items" id="nextItems"></div>
+            <div class="separator" id="recomendadosSeparator" style="display: none;">
+              <hr>
+              <h4>Recomendados</h4>
+            </div>
+            <div class="recomendados-items" id="recomendadosItems"></div>
+          </div>
+          <div id="detallesContent" class="panel-section">
+            <div class="text-content" id="textContent"></div>
+          </div>
+          <div id="bibliotecaContent" class="panel-section">
+            <div class="likes-section">
+              <h4>Tus me gusta</h4>
+              <button id="viewAllLikes">Ver todo</button>
+              <div id="likesView" class="likes-view carousel">
+                <div class="likes-carousel" id="likesCarousel"></div>
+              </div>
+            </div>
+            <div class="playlist-section">
+              <h4>Tu lista</h4>
+              <div class="playlist-items" id="playlistItems"></div>
+              <button id="playUserPlaylistBtn">Reproducir esta lista</button>
+            </div>
+          </div>
+          <div id="velocidadContent" class="panel-section">
+            <div class="options-panel">
+              <span id="currentSpeed">1x</span>
+              <input type="range" id="speedSlider" min="0.25" max="2" step="0.25" value="1">
+              <div class="speed-labels">
+                <span>0.25x</span><span>0.5x</span><span>0.75x</span><span>1x</span><span>1.25x</span><span>1.5x</span><span>1.75x</span><span>2x</span>
+              </div>
+            </div>
+          </div>
+          <div id="temporizadorContent" class="panel-section">
+            <div id="timerCountdown" style="display: none;">
+              <span id="countdownDisplay"></span>
+              <button id="deactivateTimer">Desactivar temporizador</button>
+            </div>
+            <div id="timerOptions" class="options-panel timer-options">
+              <button data-value="5">5 min</button>
+              <button data-value="10">10 min</button>
+              <button data-value="15">15 min</button>
+              <button data-value="30">30 min</button>
+              <button data-value="45">45 min</button>
+              <button data-value="60">1 hora</button>
+              <button data-value="end">Fin del episodio</button>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
-</div>
 
-<script>
-    // CONFIGURACIÓN
-    const coverImageDefault = 'https://www.lzmradiomiami.com/wp-content/uploads/2018/05/Dimensiones-personalizadas-660x330-px-660x330.jpeg';
-    const baseUrl = 'https://misitio.com'; // Cambiar por tu dominio real
-    const ICONS = {
-        play: 'https://nikichitonjesus.odoo.com/web/image/715-d5d403f0/playvid.png',
-        pause: 'https://nikichitonjesus.odoo.com/web/image/716-c7a68f34/pausevid.png',
-        rewind10: 'https://video-nikichitonjesus.odoo.com/web/image/438-deea748f/-10.webp',
-        forward10: 'https://video-nikichitonjesus.odoo.com/web/image/439-9448d521/%2B10.webp',
-        volumeHigh: 'https://nikichitonjesus.odoo.com/web/image/587-e4437449/volumen.png',
-        volumeMute: 'https://nikichitonjesus.odoo.com/web/image/584-d2f5c35f/mute.png',
-        fullscreen: 'https://nikichitonjesus.odoo.com/web/image/622-49c31be4/full.png',
-        fullscreenExit: 'https://nikichitonjesus.odoo.com/web/image/623-e47eb360/Exitfull.png',
-        chapters: 'https://video-nikichitonjesus.odoo.com/web/image/445-ad116cfc/episodios.webp',
-        next: 'https://nikichitonjesus.odoo.com/web/image/1116-2df0992f/avanzar%2015s.png',
-        close: 'https://nikichitonjesus.odoo.com/web/image/560-69997e09/cerrar.png'
-    };
+    <!-- VISTA MINIMIZADA -->
+    <div id="playerMinimized" class="player-minimized" style="display: none;">
+      <div class="video-progress-container-minimized" id="progressContainerMinimized">
+        <div class="progress-bar-minimized" id="progressBarMinimized">
+          <div class="progress-knob-minimized"></div>
+        </div>
+      </div>
+      <div class="minimized-content">
+        <div class="minimized-cover">
+          <img id="minimizedCover" src="" alt="Portada" loading="lazy">
+        </div>
+        <div class="minimized-title-container">
+          <span id="episodeTitleMinimized" class="minimized-title"></span>
+        </div>
+        <div class="minimized-controls">
+          <button id="rewindMinimized">
+            <img src="https://marca1.odoo.com/web/image/503-ed98d111/retroceder15.svg" alt="Rewind" loading="lazy">
+          </button>
+          <button id="playPauseMinimized">
+            <img id="playPauseIconMinimized" src="https://marca1.odoo.com/web/image/508-f876320c/play.svg" alt="Play" loading="lazy">
+          </button>
+          <button id="forwardMinimized">
+            <img src="https://marca1.odoo.com/web/image/507-089c3773/avanzar15.svg" alt="Fast Forward" loading="lazy">
+          </button>
+          <button id="expandBtn">
+            <img src="https://marca1.odoo.com/web/image/516-3ecd56b1/full-2.svg" alt="Expand" loading="lazy">
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
 
-    // Lista de episodios con serie
-    const episodes = [
-        {
-            id: 'job-un-hombre-fiel',
-            title: 'Job-un hombre fiel',
-            src: 'https://archive.org/download/ixil1/Job0.3.mp4',
-            author: 'Niki Chiton Jesus',
-            thumbnail: 'https://video.nikichitonjesus.org/web/image/439-6b2939e0/10.webp',
-            serie: '1'
-        },
-        {
-            id: 'otro-episodio',
-            title: 'Otro episodio',
-            src: 'https://example.com/video2.mp4',
-            author: 'Niki Chiton Jesus',
-            thumbnail: coverImageDefault,
-            serie: '1'
-        },
-        {
-            id: 'serie2-ep1',
-            title: 'Episodio 1 de serie 2',
-            src: 'https://example.com/video3.mp4',
-            author: 'Niki Chiton Jesus',
-            thumbnail: coverImageDefault,
-            serie: '2'
-        }
-    ];
+  <!-- Cargar el JavaScript del reproductor -->
+  <script src="/reproductor/reproductor.js"></script>
 
-    let currentEpisodeIndex = 0;
-    let hideTimer = null;
-    let isFullscreen = false;
-    let lastVolume = 1;
-    let tapCount = 0;
-    let tapTimeout = null;
-    let tapSide = null; // 'left' or 'right'
-    const tapDelay = 300; // ms
-
-    const video = document.getElementById('video');
-    const player = document.getElementById('player-container');
-    const playIcon = document.getElementById('play-icon');
-    const centerIcon = document.getElementById('center-icon');
-    const progressBar = document.getElementById('progress-bar');
-    const currentTimeEl = document.getElementById('current-time');
-    const durationEl = document.getElementById('duration');
-    const loadingOverlay = document.getElementById('loading-overlay');
-    const loadingCover = document.getElementById('loading-cover');
-    const errorMsg = document.getElementById('error-message');
-    const fullscreenBtn = document.getElementById('fullscreen-btn');
-    const fullscreenBtnImg = fullscreenBtn.querySelector('img');
-    const fullscreenBottomBtn = document.getElementById('fullscreen-btn-bottom');
-    const fullscreenBottomBtnImg = fullscreenBottomBtn.querySelector('img');
-    const nextBtn = document.getElementById('next-episode-btn');
-    const sidebarTitle = document.getElementById('sidebar-title');
-    const topLeftGroup = document.getElementById('top-left-group');
-    const watermarkOriginal = document.getElementById('watermark-original');
-    const seekLeft = document.getElementById('seek-indicator-left');
-    const seekRight = document.getElementById('seek-indicator-right');
-    const seekLeftValue = document.getElementById('seek-left-value');
-    const seekRightValue = document.getElementById('seek-right-value');
-    const shareModal = document.getElementById('share-modal');
-    const embedVideoOption = document.getElementById('embed-video-option');
-    const embedSerieOption = document.getElementById('embed-serie-option');
-    const embedVideoInput = document.getElementById('embed-video-code');
-    const embedSerieInput = document.getElementById('embed-serie-code');
-
-    // Mover marca de agua al grupo superior izquierdo
-    if (watermarkOriginal && topLeftGroup) {
-        const watermarkContent = watermarkOriginal.querySelector('a').cloneNode(true);
-        watermarkContent.id = 'watermark-link-moved';
-        topLeftGroup.insertBefore(watermarkContent, topLeftGroup.firstChild);
-        watermarkOriginal.style.display = 'none';
+  <script>
+    function playMiEpisodio() {
+      const episodio = {
+        mediaUrl: 'https://ejemplo.com/mi-audio.mp3',
+        mediaType: 'audio',
+        coverUrlContainer: 'https://ejemplo.com/cover-grande.jpg',
+        coverUrlInfo: 'https://ejemplo.com/cover-pequeno.jpg',
+        title: 'Mi episodio especial',
+        detailUrl: 'https://ejemplo.com/detalle',
+        author: 'Autor Ejemplo',
+        next: [], // opcional
+        text: 'Descripción del episodio',
+        allowDownload: true,
+        color: '#ff5733' // color personalizado
+      };
+      window.playExpanded(episodio);
     }
-
-    // Función para parsear la ruta (para GitHub Pages con 404)
-    function parsePath() {
-        let path = window.location.pathname;
-        // Si venimos de 404, puede estar en sessionStorage
-        if (sessionStorage.getItem('redirect')) {
-            path = sessionStorage.getItem('redirect');
-            sessionStorage.removeItem('redirect');
-        }
-        const parts = path.split('/').filter(p => p);
-        if (parts[0] === 'embed') {
-            if (parts[1] === 'serie' && parts[2]) {
-                return { type: 'serie', value: parts[2] };
-            } else if (parts[1]) {
-                return { type: 'id', value: parts[1] };
-            }
-        }
-        return null;
-    }
-
-    // Cargar según la ruta
-    function loadFromPath() {
-        const route = parsePath();
-        if (route) {
-            if (route.type === 'id') {
-                const epIndex = episodes.findIndex(ep => ep.id === route.value);
-                if (epIndex !== -1) {
-                    currentEpisodeIndex = epIndex;
-                    // Mostrar todos los episodios (o filtrar por serie? Lo dejamos todos)
-                    updateEpisodesList();
-                } else {
-                    // No encontrado, cargar por defecto
-                    currentEpisodeIndex = 0;
-                }
-            } else if (route.type === 'serie') {
-                // Filtrar episodios por serie
-                const filtered = episodes.filter(ep => ep.serie === route.value);
-                if (filtered.length > 0) {
-                    // Reemplazar episodes global con los filtrados? O mejor tener una lista filtrada temporal.
-                    // Para simplificar, podemos asignar a episodesFiltered y trabajar con esa.
-                    window.filteredEpisodes = filtered;
-                    window.usingFilter = true;
-                    // Actualizar la lista en el sidebar
-                    currentEpisodeIndex = 0; // primer episodio de la serie
-                    updateEpisodesList(true); // true indica usar filtrados
-                } else {
-                    window.usingFilter = false;
-                    currentEpisodeIndex = 0;
-                }
-            }
-        } else {
-            window.usingFilter = false;
-        }
-        // Cargar el episodio actual
-        loadEpisode(currentEpisodeIndex);
-    }
-
-    // Sobrescribir la función updateEpisodesList para usar filtered si existe
-    const originalUpdateEpisodesList = updateEpisodesList;
-    window.updateEpisodesList = function(useFiltered) {
-        const list = (useFiltered && window.filteredEpisodes) ? window.filteredEpisodes : episodes;
-        const container = document.getElementById('episodes-list');
-        container.innerHTML = '';
-        list.forEach((ep, i) => {
-            const active = i === currentEpisodeIndex;
-            const div = document.createElement('div');
-            div.style.cssText = `display:flex; gap:12px; padding:10px; border-radius:12px; cursor:pointer; transition:all .2s; ${active ? 'background:rgba(127,25,230,0.15); border:1px solid #7f19e6;' : 'background:rgba(255,255,255,0.03);'}`;
-            div.innerHTML = `
-                <div style="width:90px; height:50px; border-radius:6px; overflow:hidden; position:relative;">
-                    <img src="${ep.thumbnail || coverImageDefault}" style="width:100%; height:100%; object-fit:cover;" class="no-copy">
-                    ${active ? `<img src="${ICONS.play}" style="position:absolute; inset:0; margin:auto; width:24px; height:24px;" class="no-copy">` : ''}
-                </div>
-                <div style="flex:1;">
-                    <p style="font-size:0.7rem; ${active?'color:#7f19e6;':''}">${active ? '▶ REPRODUCIENDO' : ''}</p>
-                    <p style="font-weight:600; color:#fff; font-size:0.9rem;">${ep.id}. ${ep.title}</p>
-                    <p style="font-size:0.7rem; color:#aaa;">${ep.author}</p>
-                </div>
-            `;
-            div.addEventListener('click', () => {
-                if (useFiltered && window.filteredEpisodes) {
-                    // Encontrar el índice real en episodes?
-                    const realIndex = episodes.findIndex(e => e.id === ep.id);
-                    if (realIndex !== -1) loadEpisode(realIndex);
-                } else {
-                    loadEpisode(i);
-                }
-                document.getElementById('episodes-sidebar').style.transform = 'translateX(100%)';
-            });
-            container.appendChild(div);
-        });
-    };
-
-    function formatTime(seconds) {
-        if (!seconds || isNaN(seconds)) return '00:00';
-        const m = Math.floor(seconds / 60);
-        const s = Math.floor(seconds % 60);
-        return `${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`;
-    }
-
-    function updatePlayIcons(playing) {
-        const src = playing ? ICONS.pause : ICONS.play;
-        playIcon.src = src;
-        centerIcon.src = src;
-    }
-
-    function showControls() {
-        player.classList.add('show-controls');
-        clearTimeout(hideTimer);
-    }
-
-    function scheduleHide() {
-        clearTimeout(hideTimer);
-        if (!video.paused) {
-            hideTimer = setTimeout(() => player.classList.remove('show-controls'), 4000);
-        }
-    }
-
-    function toggleControlsVisibility() {
-        if (player.classList.contains('show-controls')) {
-            if (!video.paused) player.classList.remove('show-controls');
-        } else {
-            player.classList.add('show-controls');
-        }
-    }
-
-    function updateNextButton() {
-        const currentSerie = episodes[currentEpisodeIndex]?.serie;
-        if (episodes.length <= 1 || (window.usingFilter && window.filteredEpisodes.length <= 1)) {
-            nextBtn.innerHTML = `<img src="${ICONS.next}" class="no-copy" style="width:18px;height:18px;"> <span>Ver más episodios</span>`;
-            nextBtn.onclick = () => { window.open('https://video.nikichitonjesus.org/', '_blank'); };
-            sidebarTitle.textContent = 'Episodio único';
-        } else {
-            nextBtn.innerHTML = `<img src="${ICONS.next}" class="no-copy" style="width:18px;height:18px;"> <span>Siguiente Episodio</span>`;
-            nextBtn.onclick = () => {
-                let nextIdx;
-                if (window.usingFilter && window.filteredEpisodes) {
-                    const currentFilteredIndex = window.filteredEpisodes.findIndex(ep => ep.id === episodes[currentEpisodeIndex].id);
-                    if (currentFilteredIndex < window.filteredEpisodes.length - 1) {
-                        const nextEp = window.filteredEpisodes[currentFilteredIndex + 1];
-                        nextIdx = episodes.findIndex(ep => ep.id === nextEp.id);
-                    } else {
-                        return;
-                    }
-                } else {
-                    nextIdx = currentEpisodeIndex + 1;
-                }
-                if (nextIdx !== undefined && nextIdx < episodes.length) loadEpisode(nextIdx);
-            };
-            sidebarTitle.textContent = 'Episodios';
-        }
-    }
-
-    function loadEpisode(idx) {
-        if (idx < 0 || idx >= episodes.length) return;
-        currentEpisodeIndex = idx;
-       
-        const ep = episodes[idx];
-        video.src = ep.src;
-       
-        loadingCover.src = ep.thumbnail || coverImageDefault;
-        loadingOverlay.style.display = 'flex';
-        errorMsg.style.display = 'none';
-       
-        document.getElementById('episode-title').textContent = ep.title;
-        document.getElementById('episode-subtitle').textContent = ep.author;
-       
-        video.load();
-        video.play().catch(() => {});
-       
-        updateNextButton();
-        updateEpisodesList(window.usingFilter);
-        setupMediaSession();
-        updateEmbedOptions(ep);
-    }
-
-    function setupMediaSession() {
-        if (!('mediaSession' in navigator)) return;
-       
-        const ep = episodes[currentEpisodeIndex];
-        navigator.mediaSession.metadata = new MediaMetadata({
-            title: ep.title,
-            artist: ep.author,
-            artwork: [
-                { src: ep.thumbnail || coverImageDefault, sizes: '512x512', type: 'image/jpeg' }
-            ]
-        });
-        navigator.mediaSession.setActionHandler('play', () => video.play());
-        navigator.mediaSession.setActionHandler('pause', () => video.pause());
-        navigator.mediaSession.setActionHandler('seekbackward', () => seekTo(-10));
-        navigator.mediaSession.setActionHandler('seekforward', () => seekTo(10));
-        if (currentEpisodeIndex > 0) {
-            navigator.mediaSession.setActionHandler('previoustrack', () => loadEpisode(currentEpisodeIndex - 1));
-        } else {
-            navigator.mediaSession.setActionHandler('previoustrack', null);
-        }
-        if (currentEpisodeIndex < episodes.length - 1) {
-            navigator.mediaSession.setActionHandler('nexttrack', () => loadEpisode(currentEpisodeIndex + 1));
-        } else {
-            navigator.mediaSession.setActionHandler('nexttrack', null);
-        }
-    }
-
-    // Función para buscar y mostrar indicador
-    function seekTo(seconds) {
-        const newTime = video.currentTime + seconds;
-        video.currentTime = Math.min(Math.max(newTime, 0), video.duration || Infinity);
-        const direction = seconds > 0 ? 'right' : 'left';
-        showSeekIndicator(direction, Math.abs(seconds));
-        showControls();
-        scheduleHide();
-    }
-
-    function showSeekIndicator(side, seconds) {
-        const indicator = side === 'left' ? seekLeft : seekRight;
-        const valueSpan = side === 'left' ? seekLeftValue : seekRightValue;
-        valueSpan.textContent = seconds;
-        indicator.classList.add('show');
-        clearTimeout(indicator.hideTimeout);
-        indicator.hideTimeout = setTimeout(() => {
-            indicator.classList.remove('show');
-        }, 800);
-    }
-
-    // Manejo de toques múltiples
-    function handleTap(e) {
-        // Ignorar si el toque es sobre un botón o descendiente
-        if (e.target.closest('button')) return;
-
-        const rect = player.getBoundingClientRect();
-        const touchX = e.touches[0].clientX - rect.left;
-        const side = touchX < rect.width / 2 ? 'left' : 'right';
-
-        tapCount++;
-        if (!tapSide) tapSide = side;
-
-        // Si el lado cambia durante la secuencia, reiniciamos
-        if (tapSide !== side) {
-            resetTap();
-            return;
-        }
-
-        // Reiniciar timeout
-        clearTimeout(tapTimeout);
-        tapTimeout = setTimeout(() => {
-            // Ejecutar acción según tapCount
-            if (tapCount === 1) {
-                // Un toque: toggle controles
-                toggleControlsVisibility();
-            } else {
-                // Múltiples toques: avanzar/retroceder
-                const seconds = (tapCount - 1) * 10;
-                seekTo(tapSide === 'right' ? seconds : -seconds);
-            }
-            resetTap();
-        }, tapDelay);
-
-        e.preventDefault(); // Para evitar zoom etc.
-    }
-
-    function resetTap() {
-        tapCount = 0;
-        tapSide = null;
-        clearTimeout(tapTimeout);
-    }
-
-    // Eventos táctiles
-    player.addEventListener('touchstart', handleTap, { passive: false });
-
-    // Eventos de ratón para escritorio (doble clic)
-    player.addEventListener('dblclick', (e) => {
-        if (e.target.closest('button')) return;
-        const rect = player.getBoundingClientRect();
-        const clickX = e.clientX - rect.left;
-        const side = clickX < rect.width / 2 ? 'left' : 'right';
-        seekTo(side === 'right' ? 10 : -10);
-    });
-
-    // Actividad del ratón
-    player.addEventListener('mousemove', () => { showControls(); scheduleHide(); });
-    player.addEventListener('touchmove', () => { showControls(); scheduleHide(); });
-
-    // Eventos de video
-    video.addEventListener('timeupdate', () => {
-        if (!video.duration) return;
-        progressBar.style.width = `${(video.currentTime / video.duration) * 100}%`;
-        currentTimeEl.textContent = formatTime(video.currentTime);
-        if ('mediaSession' in navigator && 'setPositionState' in navigator.mediaSession) {
-            navigator.mediaSession.setPositionState({
-                duration: video.duration || 0,
-                position: video.currentTime,
-                playbackRate: video.playbackRate
-            });
-        }
-    });
-
-    video.addEventListener('loadedmetadata', () => {
-        durationEl.textContent = formatTime(video.duration);
-        loadingOverlay.style.display = 'none';
-        scheduleHide();
-    });
-
-    video.addEventListener('loadstart', () => { loadingOverlay.style.display = 'flex'; errorMsg.style.display = 'none'; });
-    video.addEventListener('waiting', () => { loadingOverlay.style.display = 'flex'; });
-    video.addEventListener('playing', () => {
-        loadingOverlay.style.display = 'none';
-        updatePlayIcons(true);
-        scheduleHide();
-    });
-    video.addEventListener('pause', () => {
-        updatePlayIcons(false);
-        showControls();
-    });
-    video.addEventListener('ended', () => {
-        if (episodes.length > 1 && currentEpisodeIndex < episodes.length - 1) {
-            loadEpisode(currentEpisodeIndex + 1);
-        }
-    });
-    video.addEventListener('error', (e) => {
-        loadingOverlay.style.display = 'none';
-        errorMsg.style.display = 'flex';
-        console.error('Video error:', e);
-    });
-
-    function retryVideo() {
-        errorMsg.style.display = 'none';
-        video.load();
-        video.play().catch(() => {});
-    }
-
-    // Botones
-    document.getElementById('play-pause-btn').addEventListener('click', (e) => { e.stopPropagation(); togglePlay(); });
-    document.getElementById('center-play-btn').addEventListener('click', (e) => { e.stopPropagation(); togglePlay(); });
-
-    function togglePlay() {
-        if (video.paused) video.play();
-        else video.pause();
-        showControls();
-    }
-
-    document.getElementById('progress-container').addEventListener('click', (e) => {
-        e.stopPropagation();
-        const rect = e.currentTarget.getBoundingClientRect();
-        video.currentTime = ((e.clientX - rect.left) / rect.width) * video.duration;
-    });
-
-    document.getElementById('rewind-10').addEventListener('click', (e) => {
-        e.stopPropagation();
-        seekTo(-10);
-    });
-
-    document.getElementById('forward-10').addEventListener('click', (e) => {
-        e.stopPropagation();
-        seekTo(10);
-    });
-
-    const volumeSlider = document.getElementById('volume-slider');
-    const volumeIcon = document.getElementById('volume-icon');
-    volumeSlider.addEventListener('input', (e) => {
-        e.stopPropagation();
-        video.volume = volumeSlider.value;
-        volumeIcon.src = video.volume > 0 ? ICONS.volumeHigh : ICONS.volumeMute;
-    });
-
-    document.getElementById('volume-btn').addEventListener('click', (e) => {
-        e.stopPropagation();
-        if (video.volume > 0) {
-            lastVolume = video.volume;
-            video.volume = 0;
-            volumeSlider.value = 0;
-            volumeIcon.src = ICONS.volumeMute;
-        } else {
-            video.volume = lastVolume;
-            volumeSlider.value = lastVolume;
-            volumeIcon.src = ICONS.volumeHigh;
-        }
-        showControls();
-    });
-
-    function updateFullscreenButtons(isFull) {
-        const src = isFull ? ICONS.fullscreenExit : ICONS.fullscreen;
-        fullscreenBtnImg.src = src;
-        if (fullscreenBottomBtnImg) fullscreenBottomBtnImg.src = src;
-    }
-
-    async function lockOrientation() {
-        if (window.innerWidth <= 768 && screen.orientation && screen.orientation.lock) {
-            try { await screen.orientation.lock('landscape'); } catch (err) {}
-        }
-    }
-
-    function toggleFullscreen() {
-        if (!document.fullscreenElement) {
-            player.requestFullscreen().then(() => {
-                updateFullscreenButtons(true);
-                lockOrientation();
-            });
-        } else {
-            document.exitFullscreen();
-        }
-    }
-
-    fullscreenBtn.addEventListener('click', (e) => { e.stopPropagation(); toggleFullscreen(); });
-    fullscreenBottomBtn.addEventListener('click', (e) => { e.stopPropagation(); toggleFullscreen(); });
-
-    document.addEventListener('fullscreenchange', () => {
-        const isFull = !!document.fullscreenElement;
-        isFullscreen = isFull;
-        updateFullscreenButtons(isFull);
-        if (window.innerWidth <= 768) {
-            if (isFull) {
-                player.classList.add('mobile-fullscreen');
-            } else {
-                player.classList.remove('mobile-fullscreen');
-                if (screen.orientation && screen.orientation.unlock) screen.orientation.unlock();
-            }
-        }
-        if (!isFull) showControls();
-    });
-
-    window.addEventListener('resize', () => {
-        if (document.fullscreenElement && window.innerWidth > 768) {
-            player.classList.remove('mobile-fullscreen');
-        } else if (document.fullscreenElement && window.innerWidth <= 768) {
-            player.classList.add('mobile-fullscreen');
-        }
-    });
-
-    document.getElementById('pip-btn').addEventListener('click', (e) => {
-        e.stopPropagation();
-        if (document.pictureInPictureElement) {
-            document.exitPictureInPicture();
-        } else if (video.requestPictureInPicture) {
-            video.requestPictureInPicture().catch(() => {});
-        }
-    });
-
-    document.getElementById('chapters-btn').addEventListener('click', (e) => {
-        e.stopPropagation();
-        document.getElementById('episodes-sidebar').style.transform = 'translateX(0)';
-    });
-
-    document.getElementById('close-sidebar').addEventListener('click', () => {
-        document.getElementById('episodes-sidebar').style.transform = 'translateX(100%)';
-    });
-
-    // Funcionalidad de compartir
-    document.getElementById('share-btn').addEventListener('click', (e) => {
-        e.stopPropagation();
-        shareModal.style.display = 'flex';
-    });
-
-    document.getElementById('close-modal').addEventListener('click', () => {
-        shareModal.style.display = 'none';
-    });
-
-    shareModal.addEventListener('click', (e) => {
-        if (e.target === shareModal) shareModal.style.display = 'none';
-    });
-
-    function updateEmbedOptions(ep) {
-        const videoUrl = `${baseUrl}/embed/${ep.id}`;
-        embedVideoInput.value = `<iframe width="560" height="315" src="${videoUrl}" frameborder="0" allowfullscreen></iframe>`;
-        if (ep.serie && ep.serie !== 'false') {
-            embedSerieOption.style.display = 'block';
-            const serieUrl = `${baseUrl}/embed/serie/${ep.serie}`;
-            embedSerieInput.value = `<iframe width="560" height="315" src="${serieUrl}" frameborder="0" allowfullscreen></iframe>`;
-        } else {
-            embedSerieOption.style.display = 'none';
-        }
-    }
-
-    window.copyToClipboard = function(inputId) {
-        const input = document.getElementById(inputId);
-        input.select();
-        document.execCommand('copy');
-        alert('Copiado al portapapeles');
-    };
-
-    // Inicialización
-    document.getElementById('watermark-link').href = 'https://misitio.com';
-    video.volume = 1;
-    loadFromPath(); // Carga según ruta
-    updatePlayIcons(false);
-    showControls();
-    scheduleHide();
-
-    // Protección imágenes
-    document.querySelectorAll('.no-copy').forEach(el => {
-        el.addEventListener('contextmenu', e => e.preventDefault());
-        el.addEventListener('dragstart', e => e.preventDefault());
-    });
-
-    if (window.innerWidth <= 768) {
-        fullscreenBottomBtn.style.display = 'inline-block';
-    }
-</script>
-<!-- Script para redirigir desde 404 (se ejecutará solo si es necesario) -->
-<script>
-    // Si no hay sesión de redirección, pero la ruta no es la raíz, forzamos recarga?
-    // Esto es para cuando se accede directamente a /embed/... sin 404
-    (function() {
-        if (window.location.pathname !== '/' && !sessionStorage.getItem('redirect')) {
-            // Podría ser que el servidor haya servido index.html directamente (GitHub Pages hace eso)
-            // Entonces parseamos directamente
-            console.log('Ruta detectada:', window.location.pathname);
-        }
-    })();
-</script>
+  </script>
 </body>
 </html>
