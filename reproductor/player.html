@@ -1,0 +1,242 @@
+<!-- reproductor/player.html -->
+<div id="playerUniversal" class="player-universal">
+  <!-- VISTA EXPANDIDA -->
+  <div id="playerExpanded" class="player-expanded" style="display: none;">
+    <div class="complex1 top-controls">
+      <button id="mediaModeToggle" class="media-mode-toggle">
+        <span class="mode-left">Audio</span>
+        <span class="mode-right">Video</span>
+      </button>
+      <button id="minimizeBtn" class="minimize-btn">
+        <img src="https://marca1.odoo.com/web/image/490-b15e1d52/minimizar.svg" alt="Minimize" loading="lazy">
+      </button>
+    </div>
+    <div class="content-wrapper">
+      <div class="complex2">
+        <div id="mediaContainer" class="media-container">
+          <video id="mediaElement" style="display: none;" controlsList="nodownload nofullscreen noremoteplayback" disablePictureInPicture preload="metadata"></video>
+          <img id="mediaCover" style="display: block;" src="" loading="lazy">
+          <div class="overlay-gradient" id="overlayGradient">
+            <div class="media-controls-center">
+              <button id="playPauseMedia" class="control-btn">
+                <img id="playPauseIconMedia" src="https://nikichitonjesus.odoo.com/web/image/1140-f876320c/play.svg" alt="Play" loading="lazy">
+              </button>
+            </div>
+            <div class="media-controls-bottom">
+              <button id="volumeBtn" class="volume-btn">
+                <img id="volumeIcon" src="https://marca1.odoo.com/web/image/505-b00aeb8e/volumen.svg" alt="Volume" loading="lazy">
+              </button>
+              <button id="fullscreenBtn" class="fullscreen-btn">
+                <img src="https://marca1.odoo.com/web/image/499-48202209/full.svg" alt="Fullscreen" loading="lazy">
+              </button>
+            </div>
+          </div>
+          <div class="seek-indicator-left" id="seekIndicatorLeft">
+            <span id="seekSecondsLeft">15s</span>
+            <img src="https://marca1.odoo.com/web/image/506-1607e7a0/retroceder%2015.svg" alt="Rewind" loading="lazy">
+          </div>
+          <div class="seek-indicator-right" id="seekIndicatorRight">
+            <img src="https://marca1.odoo.com/web/image/504-db1a8f7a/avanzar%2015s.svg" alt="Forward" loading="lazy">
+            <span id="seekSecondsRight">15s</span>
+          </div>
+          <div id="fullscreenControls" class="fullscreen-controls" style="display: none;">
+            <!-- Controles de fullscreen (opcional) -->
+          </div>
+          <div id="muteIndicator" class="mute-indicator" style="display: none;">Silenciado</div>
+        </div>
+      </div>
+      <div class="complex3">
+        <div class="episode-info" id="episodeInfo">
+          <div class="left-section">
+            <img src="" alt="Portada" loading="lazy">
+          </div>
+          <div class="center-section">
+            <span id="episodeTitle"></span>
+            <span class="author" id="episodeAuthor"></span>
+          </div>
+          <div class="right-section">
+            <button id="addToPlaylistBtn">
+              <img id="addToPlaylistIcon" src="https://nikichitonjesus.odoo.com/web/image/772-ea85aa4b/a%C3%B1adir%20a.png" alt="Add to Playlist" loading="lazy">
+            </button>
+          </div>
+        </div>
+        <div class="video-progress-container-expanded" id="progressContainerExpanded">
+          <div class="progress-bar-expanded" id="progressBarExpanded">
+            <div class="progress-knob-expanded"></div>
+          </div>
+        </div>
+        <div class="time-info">
+          <span id="currentTimeExpanded">00:00</span>
+          <span id="durationExpanded">00:00</span>
+        </div>
+        <div class="controls">
+          <div class="speed-container">
+            <img id="speedIcon" src="https://nikichitonjesus.odoo.com/web/image/1113-9a93ad3a/speed.png" alt="Velocidad" loading="lazy">
+          </div>
+          <button id="previousExpanded">
+            <img src="https://marca1.odoo.com/web/image/502-e1f7bc1b/ant.svg" alt="Previous" loading="lazy">
+          </button>
+          <button id="rewindExpanded">
+            <img src="https://marca1.odoo.com/web/image/503-ed98d111/retroceder15.svg" alt="Rewind" loading="lazy">
+          </button>
+          <button id="playPauseExpanded">
+            <img id="playPauseIconExpanded" src="https://nikichitonjesus.odoo.com/web/image/984-ba35a699/play.webp" alt="Play" loading="lazy">
+          </button>
+          <button id="forwardExpanded">
+            <img src="https://marca1.odoo.com/web/image/507-089c3773/avanzar15.svg" alt="Forward" loading="lazy">
+          </button>
+          <button id="nextExpanded">
+            <img src="https://marca1.odoo.com/web/image/500-1957f422/sig.svg" alt="Next" loading="lazy">
+          </button>
+          <div class="timer-container">
+            <img id="timerIcon" src="https://marca1.odoo.com/web/image/512-4489ad50/tempo.svg" alt="Timer" loading="lazy">
+          </div>
+        </div>
+        <div class="action-buttons-container">
+          <div class="action-buttons" id="actionButtons">
+            <button id="likesBtn" class="action-btn">
+              <img id="likesIcon" src="https://marca1.odoo.com/web/image/511-0363beb5/meg.svg" alt="Me gusta" loading="lazy">
+              <span>Me gusta</span>
+            </button>
+            <button id="downloadBtn" class="action-btn">
+              <img id="downloadIcon" src="https://nikichitonjesus.odoo.com/web/image/624-ec376d7f/descargar.png" alt="Download" loading="lazy">
+              <span>Descargar</span>
+            </button>
+            <button id="shareBtn" class="action-btn">
+              <img src="https://nikichitonjesus.odoo.com/web/image/585-036b7961/cpmartir.png" alt="Share" loading="lazy">
+              <span>Compartir</span>
+            </button>
+            <button id="repeatBtn" class="action-btn">
+              <img src="https://nikichitonjesus.odoo.com/web/image/771-e8de83ec/repetir-.png" alt="Repeat" loading="lazy">
+              <span>Repetir</span>
+            </button>
+            <button id="colaBtn" class="action-btn">
+              <img src="https://marca1.odoo.com/web/image/515-2e6082a5/cola.svg" alt="Cola" loading="lazy">
+              <span>Cola</span>
+            </button>
+            <button id="detallesBtn" class="action-btn">
+              <img src="https://nikichitonjesus.odoo.com/web/image/995-7301139c/trasncrip.webp" alt="Detalles" loading="lazy">
+              <span>Detalles</span>
+            </button>
+            <button id="bibliotecaBtn" class="action-btn">
+              <img src="https://marca1.odoo.com/web/image/517-7bde9b69/Archive.svg" alt="Biblioteca" loading="lazy">
+              <span>Biblioteca</span>
+            </button>
+          </div>
+        </div>
+        <div class="program-container">
+          <button id="programBtn" class="full-width-btn">
+            <img src="https://nikichitonjes-home.odoo.com/web/image/478-0e3df8d3/reanudar.gif" alt="Program" loading="lazy">
+            <span>Programa del Día</span>
+          </button>
+        </div>
+        <div class="tabs-text">
+          <a id="linkCola"><b><span style="color: white;">A continuación</span></b></a>
+          <a id="linkDetalles"><b><span style="color: white;">Detalles</span></b></a>
+          <a id="linkBiblioteca"><b><span style="color: white;">Biblioteca</span></b></a>
+        </div>
+      </div>
+    </div>
+    <div class="panel-container" id="panelContainer" style="display: none;">
+      <div class="panel-header">
+        <div class="tabs">
+          <a id="tabCola" class="tab-content active">Cola</a>
+          <a id="tabDetalles" class="tab-content">Detalles</a>
+          <a id="tabBiblioteca" class="tab-content">Biblioteca</a>
+          <a id="tabVelocidad" class="tab-speed">Velocidad</a>
+          <a id="tabTemporizador" class="tab-timer">Temporizador</a>
+        </div>
+        <div class="panel-controls">
+          <button id="togglePanelHeightBtn">
+            <img src="https://marca1.odoo.com/web/image/513-e0bcd17f/maz.svg" alt="Ampliar/Minimizar" loading="lazy">
+          </button>
+          <button id="closePanelBtn">
+            <img src="https://marca1.odoo.com/web/image/518-a62b303e/cierra.svg" alt="Cerrar" loading="lazy">
+          </button>
+        </div>
+      </div>
+      <div class="panel-content">
+        <div id="colaContent" class="panel-section active">
+          <div class="next-items" id="nextItems"></div>
+          <div class="separator" id="recomendadosSeparator" style="display: none;">
+            <hr>
+            <h4>Recomendados</h4>
+          </div>
+          <div class="recomendados-items" id="recomendadosItems"></div>
+        </div>
+        <div id="detallesContent" class="panel-section">
+          <div class="text-content" id="textContent"></div>
+        </div>
+        <div id="bibliotecaContent" class="panel-section">
+          <div class="likes-section">
+            <h4>Tus me gusta</h4>
+            <button id="viewAllLikes">Ver todo</button>
+            <div id="likesView" class="likes-view carousel">
+              <div class="likes-carousel" id="likesCarousel"></div>
+            </div>
+          </div>
+          <div class="playlist-section">
+            <h4>Tu lista</h4>
+            <div class="playlist-items" id="playlistItems"></div>
+            <button id="playUserPlaylistBtn">Reproducir esta lista</button>
+          </div>
+        </div>
+        <div id="velocidadContent" class="panel-section">
+          <div class="options-panel">
+            <span id="currentSpeed">1x</span>
+            <input type="range" id="speedSlider" min="0.25" max="2" step="0.25" value="1">
+            <div class="speed-labels">
+              <span>0.25x</span><span>0.5x</span><span>0.75x</span><span>1x</span><span>1.25x</span><span>1.5x</span><span>1.75x</span><span>2x</span>
+            </div>
+          </div>
+        </div>
+        <div id="temporizadorContent" class="panel-section">
+          <div id="timerCountdown" style="display: none;">
+            <span id="countdownDisplay"></span>
+            <button id="deactivateTimer">Desactivar temporizador</button>
+          </div>
+          <div id="timerOptions" class="options-panel timer-options">
+            <button data-value="5">5 min</button>
+            <button data-value="10">10 min</button>
+            <button data-value="15">15 min</button>
+            <button data-value="30">30 min</button>
+            <button data-value="45">45 min</button>
+            <button data-value="60">1 hora</button>
+            <button data-value="end">Fin del episodio</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- VISTA MINIMIZADA -->
+  <div id="playerMinimized" class="player-minimized" style="display: none;">
+    <div class="video-progress-container-minimized" id="progressContainerMinimized">
+      <div class="progress-bar-minimized" id="progressBarMinimized">
+        <div class="progress-knob-minimized"></div>
+      </div>
+    </div>
+    <div class="minimized-content">
+      <div class="minimized-cover">
+        <img id="minimizedCover" src="" alt="Portada" loading="lazy">
+      </div>
+      <div class="minimized-title-container">
+        <span id="episodeTitleMinimized" class="minimized-title"></span>
+      </div>
+      <div class="minimized-controls">
+        <button id="rewindMinimized">
+          <img src="https://marca1.odoo.com/web/image/503-ed98d111/retroceder15.svg" alt="Rewind" loading="lazy">
+        </button>
+        <button id="playPauseMinimized">
+          <img id="playPauseIconMinimized" src="https://marca1.odoo.com/web/image/508-f876320c/play.svg" alt="Play" loading="lazy">
+        </button>
+        <button id="forwardMinimized">
+          <img src="https://marca1.odoo.com/web/image/507-089c3773/avanzar15.svg" alt="Fast Forward" loading="lazy">
+        </button>
+        <button id="expandBtn">
+          <img src="https://marca1.odoo.com/web/image/516-3ecd56b1/full-2.svg" alt="Expand" loading="lazy">
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
