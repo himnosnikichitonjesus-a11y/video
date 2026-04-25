@@ -34,7 +34,7 @@ window.EPISODIOS = [
   {
     id: 'la-vida-de-jesucristo',
     date: '2025-11-28',
-    mediaUrl: 'https://archive.org/download/la-vida-de-jesus-en-ixil-trailer/la%20vida%20de%20Jes%C3%BAs.mp4',
+    mediaUrl: 'https://archive.org/download/nchj-sermon/Alduc%C3%ADn%20vista%20previa.mp4',
     mediaUrl2: 'https://archive.org/download/la-vida-de-jesus-en-espanol-trailer/la%20vida%20de%20Jes%C3%BAs.mp4',
     trailer: 'https://archive.org/download/la-vida-de-jesus-en-ixil-trailer/la%20vida%20de%20Jes%C3%BAs.mp4',
     thumbnail: 'https://nikichitonjesus1.odoo.com/web/image/465-4e045826/Min-jesus.webp',
@@ -55,7 +55,7 @@ window.EPISODIOS = [
   {
     id: 'jesus-cap-2',
     date: '2025-12-05',
-    mediaUrl: 'https://archive.org/download/la-vida-de-jesus-en-espanol-trailer/la%20vida%20de%20Jes%C3%BAs.mp4',
+    mediaUrl: 'https://archive.org/download/nchj-sermon/John%20Macarthur.mp4',
     mediaUrl2: '',
     thumbnail: 'https://video.nikichitonjesus.org/web/image/438-44d31586/6.webp',
     title: 'Jesucristo: ministerio',
@@ -71,7 +71,7 @@ window.EPISODIOS = [
   {
     id: 'episodio-suelto-1',
     date: '2025-10-15',
-    mediaUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4',
+    mediaUrl: 'https://archive.org/download/nchj-sermon/La%20Vida%20De%20Jes%C3%BAs.mp4',
     mediaUrl2: '',
     thumbnail: 'https://peach.blender.org/wp-content/uploads/title_anouncement.jpg',
     title: 'Big Buck Bunny',
@@ -85,7 +85,7 @@ window.EPISODIOS = [
   {
     id: 'episodio-suelto-2',
     date: '2025-09-01',
-    mediaUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4',
+    mediaUrl: 'https://archive.org/download/nchj-sermon/Rc-Sproul-001.mp4',
     thumbnail: 'https://upload.wikimedia.org/wikipedia/commons/e/e8/Elephants_Dream_s5_both.jpg',
     title: 'Elephants Dream',
     description: 'Otro corto de muestra.',
